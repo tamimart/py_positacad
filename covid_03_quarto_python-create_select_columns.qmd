@@ -1,0 +1,204 @@
+---
+title: Create and select columns
+format: html
+---
+
+```{python}
+#| label: 'setup'
+#| include: false
+
+# Import your packages here
+import pandas as pd
+from matplotlib import rcParams
+
+# Set some options
+pd.set_option('mode.copy_on_write', True)
+pd.set_option('display.max_columns', None)
+rcParams.update({'savefig.bbox': 'tight'}) # Keeps plotnine legend from being cut off
+
+```
+
+## Create and select columns
+
+In this milestone, you'll create a new variable that calculates the cumulative number of cases and deaths across states. 
+
+
+## Recreation
+
+### Part 1 - Import
+
+Before you begin, you will need to import your data set.
+Use the code chunk below to read the data from the data file `covid.csv`,
+which is stored in the `data/` folder in your working directory.
+Be sure to save the data set to a variable named `covid`.
+
+
+```{python}
+#| label: 'recreation-import'
+
+covid = pd.read_csv('data/covid.csv')
+covid
+```
+
+### Part 2a - Create Columns
+
+Run the code below to see a table.
+
+
+```{python}
+#| label: 'recreate-this'
+#| message: false
+
+solution = pd.read_csv('data/milestone03.csv')
+solution
+```
+
+Your task is to use what you've learned to transform `covid` into this table.
+You will need to:
+
+1. Subset `covid` for records where the state is `NY` and save the result as a new data set named `subset`. Continue to work with `subset`. 
+2. Create a new column named `cumul_cases`, which contains the result of `.cumsum()`.
+3. Create a new column named `cumul_deaths`, which contains the result of `.cumsum()`.
+
+Work in the code chunk below. 
+
+```{python}
+help(pd.DataFrame.cumsum)
+```
+
+```{python}
+#| label: 'recreation-create'
+
+subset = covid.loc[covid['state'] == 'NY']
+subset['cumul_cases'] = subset['cases'].cumsum()
+subset['cumul_deaths'] = subset['deaths'].cumsum()
+subset
+
+```
+
+
+Run the following code chunk to test whether your table matches the solution:
+
+
+```{python}
+#| label: 'compare'
+
+# If your answer is correct, the comparison should return an empty DataFrame.
+subset.reset_index(drop=True).compare(solution)
+```
+
+### Part 2b - Manipulate columns
+
+Your task is to create two new columns, `cumul_cases_millions` and `cumul_deaths_millions` that contain the values from `cumul_cases` and `cumul_deaths` divided by 1000000. This will make the values easier to interpret when we plot them later.
+
+
+```{python}
+#| label: 'millions'
+subset['cumul_cases_millions'] = subset['cumul_cases'] / 1000000
+subset['cumul_deaths_millions'] = subset['cumul_deaths'] / 1000000
+subset
+```
+
+### Part 3 - Visualize
+
+Your task is to recreate the following plot using your updated version of `subset`.
+
+![](images/milestone03.png)
+
+To see a larger version of the image, navigate to the `images/` directory in
+the Files pane, then click on `milestone03.png`.
+
+
+Use the chunk below to recreate this plot.
+
+
+```{python}
+#| label: 'recreation-visualize'
+
+# Remember that all required packages have already been installed for you,
+# but you will need to import the ones you want to use. As a best practice when
+# working within a Quarto document like this one, import any packages you
+# need within the code chunk labeled `setup` at the top of the file.
+
+import plotnine as p9
+from plotnine import ggplot, aes, geom_line, scale_x_datetime,theme_classic, labs, theme, element_text
+from mizani.breaks import date_breaks
+from mizani.formatters import date_format
+
+(
+ggplot(subset, aes(y='cumul_cases_millions', x='date')) +
+  geom_line(group=1) +
+  theme_classic() +
+  scale_x_datetime(breaks=date_breaks("1 months"), labels=date_format("%m-%Y")) +
+  labs(title='Cumulative covid cases', y='Millions of cases', x='Date') +
+  theme(
+   axis_text_x = element_text(rotation=45)
+)
+)
+```
+
+
+## Extension
+
+Using the code chunk below, investigate a research question about this data, using the additional data wrangling skills you learned this week. Some ideas:
+
+1. Milestone 2 focused on patterns in case counts and deaths over time, within New York. What patterns do you see in the _ratio_ of deaths to case counts, over time, within New York and elsewhere? (Compare with states of your choosing.)
+2. Based on _either_ case numbers or deaths, divide this data into groups of your choosing (e.g. low/medium/high, above/below a national average, etc.) and explore patterns based on these groups.
+3. [any other research question of interest]
+
+Alternately, working with a data set of your own, complete the following:
+
+1. Read in your data
+2. Create at least one new variable in your data set using mathematical operations
+3. Use your updated data set to create at least one graph and/or table
+
+
+```{python}
+#| label: 'extension'
+
+# What is the pattern from deaths-cases ratio on time for the top six states with more deaths?
+
+import plotnine as p9
+from plotnine import ggplot, aes, geom_line, scale_x_datetime, theme_classic, labs, theme, element_text, facet_wrap
+from mizani.breaks import date_breaks
+from mizani.formatters import date_format
+
+covid = pd.read_csv('data/covid.csv')
+
+# which six states had more deaths?
+sum_deaths_ordered = covid. \
+groupby('state'). \
+sum('deaths'). \
+sort_values('deaths', ascending=False)
+
+# get the six state list 
+top_six = sum_deaths_ordered.head(6).index.values.tolist()
+
+# filter
+covid = covid.loc[covid.state.isin(top_six)]
+
+# remove NA and negative values 
+covid = covid.dropna()
+subset = covid.loc[(covid['deaths'] >= 0) & (covid['cases'] >= 0)]
+
+# create new column = deaths/cases ratio
+subset['cases_death_ratio'] = (subset['deaths'] / subset['cases'])
+subset['state'] = pd.Categorical(subset['state'], categories=top_six, ordered=True)
+
+# plot
+(
+ggplot(subset, aes(x='date')) +
+  geom_line(aes(y='cases_death_ratio', group='state', color='state')) +
+  facet_wrap('state') +
+  theme_classic() +
+  scale_x_datetime(breaks=date_breaks("3 months"), labels=date_format("%m-%Y")) +
+  labs(y='Deaths/Cases', x='Date') +
+  theme(
+   axis_text_x = element_text(rotation=45)
+)
+).show()
+
+
+```
+
+

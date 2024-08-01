@@ -1,0 +1,171 @@
+---
+title: Visualize and filter data
+format: html
+---
+
+```{python}
+#| label: 'setup'
+
+# Import your packages here
+import pandas as pd
+from matplotlib import rcParams
+from mizani.breaks import date_breaks
+from plotnine import (
+  ggplot, 
+  aes,
+  geom_line,
+  theme_classic,
+  labs,
+  theme,
+  facet_wrap,
+  element_text,
+  element_blank,
+  scale_x_datetime
+)
+# Set some pandas options
+pd.set_option('display.max_columns', None)
+pd.set_option('mode.copy_on_write', True)
+rcParams.update({'savefig.bbox': 'tight'}) # Keeps plotnine legend from being cut off
+```
+
+## Read and visualize
+
+In this milestone, you'll use plotnine to visualize how the number of COVID-19 cases and deaths evolved for a subset of the data.
+But before you begin, you'll need to import the `covid` data set like you did in the previous milestone.
+
+
+## Recreation
+
+### Part 1 - Import
+
+In the code chunk below, use a function from the pandas package to read in the `covid` data set.
+
+* The data set lives in the file `covid.csv`, which is stored in the `data/` folder in your working directory.
+* Assign the data set to a variable named `covid`
+
+
+```{python}
+#| label: 'recreation-import'
+
+covid = pd.read_csv("data/covid.csv")
+
+```
+
+### Part 2 - Subset
+
+Run the code below to see a table.
+
+
+```{python}
+#| label: 'recreate-this'
+#| message: false
+
+solution = pd.read_csv('data/milestone02.csv')
+solution
+```
+
+Your task is to filter `covid` for the rows where `state` is "NY" and save the result as a new data set called `subset`. 
+
+Note: the index numbers for your table and the example will be different; that is expected. We'll learn about resetting indexes in a future week.
+
+
+```{python}
+#| label: 'recreation-subset'
+
+subset = covid.loc[covid['state'] == 'NY']
+subset
+
+```
+
+### Part 3 - Visualize
+
+Your task is to recreate this plot, which displays COVID-19 cases and deaths over time for the state of New York.
+
+![](images/milestone02.png)
+
+To see a larger version of the image, navigate to the `images/` directory in the Files pane, then click on `milestone02.png`.
+
+Use plotnine functions and the `subset` data set in the following chunk to re-create the plot above.
+
+_Hint:_ This plot uses two geoms to create the two lines, one representing number of cases and the other representing number of deaths
+
+_Hint:_ If you get a warning saying, "Each group consists of only one observation. Do you need to adjust the group aesthetic?", then add `group=1` to each of your geoms. 
+
+
+```{python}
+#| label: 'recreation_visualize_1'
+
+# Remember to import the plotnine functions that you'll be using.
+# You can add them to the `setup` chunk at the top to keep your code organized. 
+
+subset.info()
+
+# Convert to a datetime object
+subset['date'] = pd.to_datetime(subset['date'])
+
+(
+ggplot(data = subset, mapping = aes(x = 'date')) +
+geom_line(aes(y = 'cases')) +
+geom_line(aes(y = 'deaths')) +
+labs(title = 'Cases and deaths for New York') +
+theme_classic() +
+theme(axis_line_y = element_blank())
+)
+
+```
+
+Using the code chunk below, investigate a research question about this data, using the visualization skills you learned this week. Some ideas:
+
+1. Your recreation focused on the evolution of COVID-19 cases and deaths in the state of New York. How does the trajectory of New York compare to another state with similar case counts?
+2. Do you see similar patterns across states? Does this answer change if you look at only high (or low) case counts?
+3. Within a state or states of interest, what patterns do you see between number of cases and number of deaths over time?
+4. [any other research question of interest]
+
+Alternately, working with a data set of your own, complete the following: 
+
+1. Read in your data
+2. Filter your data using a logical test/condition 
+3. Graph this data subset using at least one geom 
+
+
+```{python}
+#| label: 'extension'
+
+covid = pd.read_csv('data/covid.csv')
+type(covid)
+
+covid['date'] = pd.to_datetime(covid['date'])
+covid['state'] = covid['state'].astype('category')
+
+# which six states had more cases?
+sum_cases_ordered = covid. \
+groupby('state'). \
+sum('cases'). \
+sort_values('cases', ascending=False)
+
+# get the six state list 
+top_six = sum_cases_ordered.head(6).index.values.tolist()
+
+# filter table
+subset_states = covid.loc[covid.state.isin(top_six)]
+
+# order state column by sum case
+subset_states['state'] = pd.Categorical(subset_states['state'], categories=top_six, ordered=True)
+
+(
+ggplot(data = subset_states, mapping = aes(x = 'date')) +
+geom_line(aes(y = 'cases')) +
+geom_line(aes(y = 'deaths', color = 'state')) +
+facet_wrap('state', scales = 'fixed', ncol = 2) +
+labs(title = 'COVID-19 cases and deaths in top 6 states with the most cases') +
+theme_classic() +
+scale_x_datetime(breaks = date_breaks('3 month')) +
+theme(
+  axis_text_x = element_text(rotation = 45)
+  )
+)
+
+
+
+```
+

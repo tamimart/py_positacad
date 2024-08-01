@@ -1,0 +1,133 @@
+---
+title: Python Basics
+format: html
+editor_options: 
+  chunk_output_type: console
+---
+
+```{python}
+#| include: false
+# Can I get help for python functions inside Rstudio?
+
+help(pd.set_option)
+```
+
+```{python}
+#| label: 'setup'
+
+# Import your packages here
+import pandas as pd
+
+# Set a display option so all columns of tables are displayed
+pd.set_option('display.max_columns', None)
+```
+
+## Python Basics
+
+In this milestone, you'll become familiar with the `covid` data set. 
+
+## Recreation
+
+### Part 1
+
+Let's start by loading the data that we'll be using.
+
+Can you:
+
+- Run the setup chunk above, which will import pandas with the common alias, `pd`.
+- Use `help(pd.read_csv)` to explore the help page for the pandas `read_csv()` function.
+- Use `read_csv()` to load our data set, which is stored at `data/covid.csv`.
+- Save the data set to a variable named `covid`.
+
+
+```{python}
+#| label: 'recreation_1'
+
+import pandas as pd
+
+help(pd.read_csv)
+
+covid = pd.read_csv("data/covid.csv")
+
+```
+
+### Part 2
+
+Now that `covid` is loaded, run the following code chunk, which will pull out the `cases`, `deaths`, and `state` columns and save them as variables to use later. 
+
+
+```{python}
+#| label: 'save_columns'
+
+# This code may look unfamiliar.
+# Don't worry, we will cover this in next week's tutorials. 
+cases = covid['cases']
+deaths = covid['deaths']
+state = covid['state']
+```
+
+### Part 3
+
+Use Python to explore our data:
+
+- Display the contents of `covid`
+- Display the contents of the columns that we saved separately for you: `cases`, `deaths`, and `state`
+- Use the built-in `sum()` function to find the total number of cases recorded in `cases`
+- Use the built-in `max()` function to find the highest daily number of deaths recorded by any state in `deaths`
+- Use the pandas `value_counts()` function to tally up the number of records for each state in the data set
+
+*Hint:* you may want to look up the help pages for each of these functions.
+
+Write your code in the following chunk:
+
+
+```{python}
+#| label: 'recreation_2'
+
+covid
+
+cases
+
+deaths
+
+state
+
+sum(cases)
+
+deaths.max()
+
+pd.Series(state).value_counts()
+
+```
+
+## Extension
+
+Explore `covid` or one of the individual columns in a new way.
+Consider using a new function, or something that you can learn from a help page. Are there any functions that you would like to use from the `statistics` package?
+
+**For your first extension, we encourage you to think small.** Throughout this course, you will build many skills to explore data; for this first week, your work will likely be fairly straightforward. Consider _limiting yourself to 30-45 minutes_ for this portion of your work; at the end of that time interval, stop working and make notes on your progress, dead-ends, and aspirations -- bringing those to your group for discussion during the milestone session.
+
+Write your extension code in the following chunk:
+
+
+```{python}
+#| label: 'extension'
+
+type(cases)
+
+cases.median()
+deaths.median()
+
+# Median death by state?
+
+# here I'm using two object
+covid.groupby(state)['deaths'].median()
+
+covid.groupby("state").deaths.median()
+covid.groupby(['state'])['deaths'].median()
+
+# Which version is better in accordance with best practice?
+
+
+```
+
