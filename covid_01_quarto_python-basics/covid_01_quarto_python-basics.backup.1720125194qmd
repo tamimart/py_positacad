@@ -4,13 +4,14 @@ format: html
 editor_options: 
   chunk_output_type: console
 ---
-
 ```{python}
-#| include: false
+
 # Can I get help for python functions inside Rstudio?
 
 help(pd.set_option)
+
 ```
+
 
 ```{python}
 #| label: 'setup'
@@ -42,12 +43,6 @@ Can you:
 
 ```{python}
 #| label: 'recreation_1'
-
-import pandas as pd
-
-help(pd.read_csv)
-
-covid = pd.read_csv("data/covid.csv")
 
 ```
 
@@ -83,21 +78,6 @@ Write your code in the following chunk:
 
 ```{python}
 #| label: 'recreation_2'
-
-covid
-
-cases
-
-deaths
-
-state
-
-sum(cases)
-
-deaths.max()
-
-pd.Series(state).value_counts()
-
 ```
 
 ## Extension
@@ -112,22 +92,6 @@ Write your extension code in the following chunk:
 
 ```{python}
 #| label: 'extension'
-
-type(cases)
-
-cases.median()
-deaths.median()
-
-# Median death by state?
-
-# here I'm using two object
-covid.groupby(state)['deaths'].median()
-
-covid.groupby("state").deaths.median()
-covid.groupby(['state'])['deaths'].median()
-
-# Which version is better in accordance with best practice?
-
 
 ```
 

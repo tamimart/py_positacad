@@ -1,0 +1,107 @@
+---
+title: "Final Milestone: COVID-19"
+author: 
+  name: Tamires Martins
+  email: tamiresmartins.fln@gmail.com
+  url: https://github.com/tamimart
+format: 
+  html:
+    code-fold: True
+    theme: cosmo
+cap-location: top
+editor: visual
+jupyter: python3
+---
+
+```{python}
+#| label: setup
+
+# Import packages 
+import pandas as pd
+from matplotlib import rcParams
+from plotnine import ggplot, aes, geom_line, scale_x_datetime, theme_classic, labs, theme, element_text, facet_wrap
+from mizani.breaks import date_breaks
+from mizani.formatters import date_format
+
+
+# Set some options
+pd.set_option('mode.copy_on_write', True)
+pd.set_option('display.max_columns', None)
+rcParams.update({'savefig.bbox': 'tight'})
+
+# Read data
+covid = pd.read_csv("covid.csv")
+
+
+```
+
+# About data
+
+In this analysis, I'm going to use the data from [The COVID Tracking Project](https://covidtracking.com/), which describes the data as follows:
+
+> We collect, cross-check, and publish COVID-19 data from 56 US states and territories in three main areas: testing, hospitalization, and patient outcomes, racial and ethnic demographic information via The COVID Racial Data Tracker, and long-term-care facilities via the Long-Term-Care tracker. We compile these numbers to provide the most complete picture we can assemble of the US COVID-19 testing effort and the outbreak's effects on the people and communities it strikes.
+
+# Analysis
+
+First, let's take a look at it's structure:
+
+```{python}
+#| label: table
+covid
+```
+
+## What are the top six states with most deaths?
+
+```{python}
+#| label: tab-deaths
+covid.groupby('state').sum(['deaths']).sort_values(['deaths'], ascending=False).head(6)['deaths']
+```
+
+@fig-plot1 illustrates the trend in the **death-to-case ratio** over time for these states.
+
+```{python}
+#| label: fig-plot1
+#| fig-cap: Deaths-cases ratio on time.
+#| warning: False
+
+# which six states had more deaths?
+sum_deaths_ordered = covid. \
+groupby('state'). \
+sum('deaths'). \
+sort_values('deaths', ascending=False)
+
+# get the six state list 
+top_six = sum_deaths_ordered.head(6).index.values.tolist()
+
+# filter
+covid = covid.loc[covid.state.isin(top_six)]
+
+# remove NA and negative values 
+covid = covid.dropna()
+subset = covid.loc[(covid['deaths'] >= 0) & (covid['cases'] >= 0)]
+
+# create new column = deaths/cases ratio
+subset['cases_death_ratio'] = (subset['deaths'] / subset['cases'])
+subset['state'] = pd.Categorical(subset['state'], categories=top_six, ordered=True)
+
+# plot
+(
+ggplot(subset, aes(x='date')) +
+  geom_line(aes(y='cases_death_ratio', group='state', color='state')) +
+  facet_wrap('state') +
+  theme_classic() +
+  scale_x_datetime(breaks=date_breaks("3 months"), labels=date_format("%m-%Y")) +
+  labs(y='Deaths/Cases', x='Date') +
+  theme(
+   axis_text_x = element_text(rotation=45)
+)
+).show()
+```
+It appears there are specific spikes on the plot where the death-to-case ratio exceeds 0.5. Three out of the four days when more people died than were diagnosed occurred in *Pennsylvania*. Let's take a closer look:
+
+```{python}
+subset.loc[subset['cases_death_ratio'] > 0.5]
+
+```
+
+

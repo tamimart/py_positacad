@@ -196,7 +196,6 @@ bin_var_vec = np.vectorize(bin_var)
 covid['cases_category'] = bin_var_vec(covid['cases'], covid['cases'].median())
 covid['deaths_category'] = bin_var_vec(covid['deaths'], covid['deaths'].median())
 
-# can I create a function that calculates something for the number and for the Series at the same time?
 ```
 
 
